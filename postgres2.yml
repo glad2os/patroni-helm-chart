@@ -62,8 +62,8 @@ bootstrap:
       # For kerberos gss based connectivity (discard @.*$)
       #- host replication replicator 127.0.0.1/32 gss include_realm=0
       #- host all all 0.0.0.0/0 gss include_realm=0
-      - host replication replicator 127.0.0.1/32 md5
-      - host all all 0.0.0.0/0 md5
+        - host replication replicator 0.0.0.0/0 md5
+        - host all all 0.0.0.0/0 md5
       #  - hostssl all all 0.0.0.0/0 md5
 #      use_slots: true
       parameters:
@@ -90,8 +90,8 @@ bootstrap:
   - data-checksums
 
 postgresql:
-  listen: 127.0.0.1:5434
-  connect_address: 127.0.0.1:5434
+  listen: 0.0.0.0:5434
+  connect_address: postgres-2:5434
 #  proxy_address: 127.0.0.1:5435  # The address of connection pool (e.g., pgbouncer) running next to Patroni/Postgres. Only for service discovery.
   data_dir: data/postgresql2
 #  bin_dir:

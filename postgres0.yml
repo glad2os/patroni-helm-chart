@@ -22,8 +22,8 @@ bootstrap:
     postgresql:
       use_pg_rewind: true
       pg_hba:
-      - host replication replicator 127.0.0.1/32 md5
-      - host all all 0.0.0.0/0 md5
+        - host replication replicator 0.0.0.0/0 md5
+        - host all all 0.0.0.0/0 md5
       parameters:
 
   initdb:
@@ -31,8 +31,8 @@ bootstrap:
   - data-checksums
 
 postgresql:
-  listen: 127.0.0.1:5432
-  connect_address: 127.0.0.1:5432
+  listen: 0.0.0.0:5432
+  connect_address: postgres-0:5432
 
   data_dir: data/postgresql0
   pgpass: /tmp/pgpass0
