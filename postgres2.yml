@@ -37,7 +37,7 @@ restapi:
   #use_proxies: true
 
 raft:
- data_dir: data/postgresql2
+ data_dir: raft
  self_addr: postgres-2:2224
  partner_addrs:
  - postgres-0:2222

@@ -6,7 +6,7 @@ restapi:
   connect_address: postgres-0:8008
 
 raft:
- data_dir: data/postgresql0
+ data_dir: raft
  self_addr: postgres-0:2222
  partner_addrs:
  - postgres-1:2223

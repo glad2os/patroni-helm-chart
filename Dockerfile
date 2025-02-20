@@ -13,7 +13,11 @@ RUN apt-get update && \
 
 WORKDIR /home/venv
 
-RUN chown -R postgres:postgres /home/venv
+RUN chown -R postgres:postgres /home/venv && \
+    mkdir -p /home/venv/data/postgresql0 /home/venv/data/postgresql1 /home/venv/data/postgresql2 /home/venv/raft && \
+    chown -R postgres:postgres /home/venv && \
+    chmod -R 700 /home/venv/data /home/venv/raft
+
 USER postgres
 
 ENTRYPOINT ["/home/venv/bin/patroni"]
