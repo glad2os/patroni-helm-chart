@@ -3,8 +3,8 @@ scope: batman
 name: postgresql1
 
 restapi:
-  listen: 127.0.0.1:8009
-  connect_address: 127.0.0.1:8009
+  listen: 0.0.0.0:8009
+  connect_address: postgres-1:8009
 #  cafile: /etc/ssl/certs/ssl-cacert-snakeoil.pem
 #  certfile: /etc/ssl/certs/ssl-cert-snakeoil.pem
 #  keyfile: /etc/ssl/private/ssl-cert-snakeoil.key
@@ -37,11 +37,11 @@ restapi:
   #use_proxies: true
 
 raft:
- data_dir: .
- self_addr: 127.0.0.1:2223
+ data_dir: data/postgresql1
+ self_addr: postgres-1:2223
  partner_addrs:
- - 127.0.0.1:2222
- - 127.0.0.1:2224
+ - postgres-0:2222
+ - postgres-2:2224
 
 # The bootstrap configuration. Works only when the cluster is not yet initialized.
 # If the cluster is already initialized, all changes in the `bootstrap` section are ignored!

@@ -1,0 +1,46 @@
+services:
+  postgres-0:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5432:5432"
+      - "2222"
+      - "8008:8008"
+    volumes:
+      - ./postgres0.yml:/home/venv/postgres0.yml
+      - ./postgres0-data:/home/venv/data/postgresql0
+    command: ["/home/venv/postgres0.yml"]
+  postgres-1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5433:5433"
+      - "2223"
+      - "8009:8009"
+    volumes:
+      - ./postgres1.yml:/home/venv/postgres1.yml
+      - ./postgres1-data:/home/venv/data/postgresql1
+    command: ["/home/venv/postgres1.yml"]
+  postgres-2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5434:5434"
+      - "2224"
+      - "8010:8010"
+    volumes:
+      - ./postgres2.yml:/home/venv/postgres2.yml
+      - ./postgres2-data:/home/venv/data/postgresql2
+    command: ["/home/venv/postgres2.yml"]
+
+networks:
+  default:
+    driver: bridge
+
+volumes:
+  postgres0-data:
+  postgres1-data:
+  postgres2-data:
