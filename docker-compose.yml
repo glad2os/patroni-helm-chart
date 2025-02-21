@@ -1,4 +1,11 @@
 services:
+  haproxy:
+    image: haproxy:latest
+    ports:
+      - "5431:5431"
+    volumes:
+      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg
+
   postgres-0:
     build:
       context: .
