@@ -1,0 +1,53 @@
+scope: batman
+name: postgresql2
+
+restapi:
+  listen: 0.0.0.0:8010 
+  connect_address: postgres-2:8010  ## replace
+  authentication:
+    username: username 
+    password: password
+
+raft:
+ data_dir: raft
+ self_addr: postgres-2:2224  ## replace
+ partner_addrs:
+ - postgres-0:2222  ## replace
+ - postgres-1:2223  ## replace
+
+bootstrap:
+  dcs:
+    ttl: 30
+    loop_wait: 10
+    retry_timeout: 10
+    maximum_lag_on_failover: 1048576
+    postgresql:
+      use_pg_rewind: true
+      pg_hba:
+        - host replication replicator 0.0.0.0/0 md5
+        - host all all 0.0.0.0/0 md5
+      parameters:
+  initdb:
+  - encoding: UTF8
+  - data-checksums
+
+postgresql:
+  listen: 0.0.0.0:5434
+  connect_address: postgres-2:5434
+  data_dir: data/postgresql2
+  pgpass: /tmp/pgpass2
+  authentication:
+    replication:
+      username: replicator
+      password: rep-pass
+    superuser:
+      username: postgres
+      password: patroni
+    rewind:
+      username: rewind_user
+      password: rewind_password
+  parameters:
+    unix_socket_directories: '..'
+tags:
+    noloadbalance: false
+    clonefrom: false

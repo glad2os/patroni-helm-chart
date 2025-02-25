@@ -1,17 +1,16 @@
 scope: batman
-name: postgresql0
+name: postgresql0 ## replace
 
 restapi:
   listen: 0.0.0.0:8008
-  connect_address: postgres-0:8008
+  connect_address: postgres-0:8008 ## replace
 
 raft:
  data_dir: raft
- self_addr: postgres-0:2222
+ self_addr: postgres-0:2222 ## replace
  partner_addrs:
- - postgres-1:2223
- - postgres-2:2224
-
+ - postgres-1:2223 ## replace
+ - postgres-2:2224 ## replace
 
 bootstrap:
   dcs:

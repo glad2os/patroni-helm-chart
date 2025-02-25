@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: alpine
+  namespace: postgresql
+spec:
+  selector:
+    matchLabels:
+      app: alpine # has to match .spec.template.metadata.labels
+  serviceName: "alpine"
+  replicas: 3 # by default is 1
+  template:
+    metadata:
+      labels:
+        app: alpine # has to match .spec.selector.matchLabels
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+      - name: alpine
+        image: alpine:latest
+        command: ["/bin/sh", "-c", "cd ~ && touch $MY_POD_INDEX.txt && sleep infinity"]
+        env:
+          - name: MY_POD_INDEX
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['apps.kubernetes.io/pod-index']
+        ports:
+        - containerPort: 80
+          name: web
+        volumeMounts:
+        - name: config
+          mountPath: /root/postgres0.yaml
+          subPath: postgres0
+        - name: config
+          mountPath: /root/postgres1.yaml
+          subPath: postgres1
+        - name: config
+          mountPath: /root/postgres2.yaml
+          subPath: postgres2
+      volumes:
+      - name: config
+        configMap:
+          name: config
+  volumeClaimTemplates: []

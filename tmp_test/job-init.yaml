@@ -1,0 +1,37 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: pgsql-plugin-init
+  namespace: test
+  labels:
+    app: pgsql-plugin-init
+spec:
+  template:
+    metadata:
+      name: pgsql-plugin-init
+      labels:
+        app: pgsql-plugin-init
+    spec:
+      containers:
+      - name: pgsql-plugin-init
+        image: <repository>/<image>:<tag>
+        command: ["/bin/bash", "/home/venv/init-vector.sh"]
+        env:
+        - name: POSTGRES_PASSWORD
+          value: <my_password>
+        - name: POSTGRES_USER
+          value: "postgres"
+        - name: POSTGRES_DB
+          value: "postgres"
+        - name: POSTGRES_HOST
+          value: "patroni.test.svc.cluster.local"
+        volumeMounts:
+        - name: pgsql-plugin-init
+          mountPath: /home/venv/init-vector.sh
+          subPath: init-vector.sh
+      volumes:
+      - name: pgsql-plugin-init
+        configMap:
+          name: pgsql-plugin-init
+      restartPolicy: OnFailure
+      dnsPolicy: ClusterFirst
