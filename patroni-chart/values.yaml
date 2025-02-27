@@ -26,6 +26,37 @@ configmap:
         clonefrom: false
         nostream: false
 
+env:
+  - name: MY_POD_INDEX
+    valueFrom:
+      fieldRef:
+        fieldPath: metadata.labels['apps.kubernetes.io/pod-index']
+  - name: POD_NAMESPACE
+    valueFrom:
+      fieldRef:
+        fieldPath: metadata.namespace
+
+patroni:
+  ports:
+    - containerPort: 5432
+      name: postgres-0
+    - containerPort: 5433
+      name: postgres-1
+    - containerPort: 5434
+      name: postgres-2
+    - containerPort: 2222
+      name: raft-0
+    - containerPort: 2223
+      name: raft-1
+    - containerPort: 2224
+      name: raft-2
+    - containerPort: 8000
+      name: restapi-0
+    - containerPort: 8001
+      name: restapi-1
+    - containerPort: 8002
+      name: restapi-2
+
 imagePullSecrets: []
 
 serviceAccount:

@@ -30,6 +30,8 @@ spec:
       initContainers:
       - name: init-data-dir
         image: busybox
+        env:
+          {{- toYaml .Values.env | nindent 10 }}
         command: {{ .Values.initContainers.command }}
         {{- with .Values.initContainers.volumeMounts }}
         volumeMounts:
@@ -41,10 +43,13 @@ spec:
       - name: patroni
         imagePullPolicy: Always
         image: "{{ .Values.image.repository }}:{{ .Chart.AppVersion }}"
+        env:
+          {{- toYaml .Values.env | nindent 10 }}
         ports:
-        - containerPort: 5432
-          name: postgres
-        - 
+        {{- range .Values.patroni.ports }}
+        - containerPort: {{ .containerPort }}
+          name: {{ .name }}
+        {{- end }}        
         {{- with .Values.volumeMounts }}
         volumeMounts:
           {{- toYaml . | nindent 8 }}
