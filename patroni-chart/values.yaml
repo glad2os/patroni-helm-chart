@@ -1,8 +1,15 @@
-replicaCount: 3
+POSTGRES_PASSWORD: "postgres"
+POSTGRES_USER: "postgres"
+REPLICATION_PASSWORD: "replication"
+REPLICATION_USER: "replication"
+REWIND_PASSWORD: "rewind"
+REWIND_USER: "rewind"
 
 image:
   repository: harbor.softlogic.ai/library/patroni
   pullPolicy: Always
+
+imagePullSecrets: []
 
 configmap:
   baseconfig: | 
@@ -26,17 +33,40 @@ configmap:
         clonefrom: false
         nostream: false
 
-env:
-  - name: MY_POD_INDEX
-    valueFrom:
-      fieldRef:
-        fieldPath: metadata.labels['apps.kubernetes.io/pod-index']
-  - name: POD_NAMESPACE
-    valueFrom:
-      fieldRef:
-        fieldPath: metadata.namespace
+pvc:
+  storageClassName: "longhorn-default"
+  postgres:
+    resources:
+      requests:
+        storage: 1Gi
+  raft: 
+    resources:
+      requests:
+        storage: 1Gi
+
+replicaCount: 3
+
+# Use for extra env variables
+env: []
+  # - name: TEST_VARIABLE
+  #   value: test_value
+
+# Use for extra pod annotations
+podAnnotations: 
+  app: patroni
+
+# Use for extra pod labels
+podLabels:
+  app: patroni
+
+initContainers:
+  command: ["sh", "-c", ""]
+  volumeMounts:
+  - name: postgres-data
+    mountPath: /home/venv/data
 
 patroni:
+  command: ["/home/venv/bin/patroni", "/home/venv/config.yml"]
   ports:
     - containerPort: 5432
       name: postgres-0
@@ -56,26 +86,6 @@ patroni:
       name: restapi-1
     - containerPort: 8002
       name: restapi-2
-
-imagePullSecrets: []
-
-serviceAccount:
-  create: true
-  automount: true
-
-podAnnotations: 
-  app: patroni
-
-podLabels:
-  app: patroni
-
-command: ["/home/venv/bin/patroni", "/home/venv/config.yml"]
-
-initContainers:
-  command: ["sh", "-c", ""]
-  volumeMounts:
-  - name: postgres-data
-    mountPath: /home/venv/data
 
 securityContext: 
   global:
@@ -127,16 +137,9 @@ service:
     protocol: TCP
     name: restapi-2
 
-pvc:
-  storageClassName: "longhorn-default"
-  postgres:
-    resources:
-      requests:
-        storage: 1Gi
-  raft: 
-    resources:
-      requests:
-        storage: 1Gi
+serviceAccount:
+  create: true
+  automount: true
 
 volumes:
 - name: patroni-config

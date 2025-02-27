@@ -44,7 +44,30 @@ spec:
         imagePullPolicy: Always
         image: "{{ .Values.image.repository }}:{{ .Chart.AppVersion }}"
         env:
-          {{- toYaml .Values.env | nindent 10 }}
+        {{- range .Values.env }}
+          - name: {{ .name }}
+            value: {{ .value }}
+        {{- end }}
+          - name: POSTGRES_PASSWORD
+            value: {{ .Values.POSTGRES_PASSWORD }}
+          - name: POSTGRES_USER
+            value: {{ .Values.POSTGRES_USER }}
+          - name: REPLICATION_PASSWORD
+            value: {{ .Values.REPLICATION_PASSWORD }}
+          - name: REPLICATION_USER
+            value: {{ .Values.REPLICATION_USER }}
+          - name: REWIND_PASSWORD
+            value: {{ .Values.REWIND_PASSWORD }}
+          - name: REWIND_USER
+            value: {{ .Values.REWIND_USER }}
+          - name: MY_POD_INDEX
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['apps.kubernetes.io/pod-index']
+          - name: POD_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
         ports:
         {{- range .Values.patroni.ports }}
         - containerPort: {{ .containerPort }}
@@ -54,7 +77,7 @@ spec:
         volumeMounts:
           {{- toYaml . | nindent 8 }}
         {{- end }}
-        command: {{ .Values.command }}
+        command: {{ .Values.patroni.command }}
         securityContext:
         {{- toYaml .Values.securityContext.patroni | nindent 10 }}
       {{- with .Values.volumes }}
