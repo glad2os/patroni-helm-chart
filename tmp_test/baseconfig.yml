@@ -14,24 +14,6 @@ bootstrap:
   - encoding: UTF8
   - data-checksums
 
-postgresql:
-  listen: 0.0.0.0:5432
-  connect_address: postgres-0:5432
-  data_dir: data/postgresql0
-  pgpass: /tmp/pgpass0
-  authentication:
-    replication:
-      username: replicator
-      password: rep-pass
-    superuser:
-      username: postgres
-      password: patroni
-    rewind:
-      username: rewind_user
-      password: rewind_password
-  parameters:
-    unix_socket_directories: '..'
-
 tags:
     noloadbalance: false
     clonefrom: false

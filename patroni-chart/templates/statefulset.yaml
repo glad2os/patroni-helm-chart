@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+spec:
+  serviceName: postgres
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "patroni-chart.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "patroni-chart.labels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      terminationGracePeriodSeconds: 30
+      securityContext:
+      {{- toYaml .Values.securityContext.global | nindent 8 }}
+      initContainers:
+      - name: init-data-dir
+        image: busybox
+        command: {{ .Values.initContainers.command }}
+        {{- with .Values.initContainers.volumeMounts }}
+        volumeMounts:
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+        securityContext:
+        {{- toYaml .Values.securityContext.initContainers | nindent 10 }}
+      containers:
+      - name: patroni
+        imagePullPolicy: Always
+        image: "{{ .Values.image.repository }}:{{ .Chart.AppVersion }}"
+        ports:
+        - containerPort: 5432
+          name: postgres
+        - 
+        {{- with .Values.volumeMounts }}
+        volumeMounts:
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+        command: {{ .Values.command }}
+        securityContext:
+        {{- toYaml .Values.securityContext.patroni | nindent 10 }}
+      {{- with .Values.volumes }}
+      volumes:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+  volumeClaimTemplates:
+  - metadata:
+      name: postgres-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: {{ .Values.pvc.storageClassName }}
+      resources: {{ toYaml .Values.pvc.postgres.resources | nindent 8 }}
+  - metadata:
+      name: raft-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: {{ .Values.pvc.storageClassName }}
+      resources: {{ toYaml .Values.pvc.raft.resources | nindent 8 }}
+

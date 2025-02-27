@@ -1,0 +1,9 @@
+apiVersion: v2
+name: patroni-chart
+description: A Helm chart for Patroni
+
+type: application
+
+version: 0.0.1
+
+appVersion: "latest"

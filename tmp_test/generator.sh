@@ -54,8 +54,51 @@ restapi:
 
 EOF
 
+# Postgres field
+
+echo "superuser creds: "
+echo "Using password: $POSTGRES_PASSWORD"
+echo "Using user: $POSTGRES_USER"
+
+echo "replication creds: "
+echo "Using password: $REPLICATION_PASSWORD"
+echo "Using user: $REPLICATION_USER"
+
+echo "rewind creds: "
+echo "Using password: $REWIND_PASSWORD"
+echo "Using user: $REWIND_USER"
+
+POSTGRES_PORT=$((5432 + MY_POD_INDEX))
+
+cat <<EOF >> ./config.yml
+postgresql:
+  listen: 0.0.0.0:$POSTGRES_PORT
+  connect_address: postgres-${MY_POD_INDEX}.postgres.${POD_NAMESPACE}.svc.cluster.local:$POSTGRES_PORT
+  data_dir: data/postgresql${MY_POD_INDEX}
+  pgpass: /tmp/pgpass${MY_POD_INDEX}
+  authentication:
+    replication:
+      username: $REPLICATION_USER
+      password: $REPLICATION_PASSWORD
+    superuser:
+      username: $POSTGRES_USER
+      password: $POSTGRES_USER
+    rewind:
+      username: $REWIND_USER
+      password: $REWIND_PASSWORD
+  parameters:
+    unix_socket_directories: '..'
+EOF
+
 # Copy base config into config.yml
 
 cat ./baseconfig.yml >> ./config.yml
 
 echo "Generated config.yml"
+
+mkdir -p /home/venv/data/pg_data && \
+chmod -R 700 /home/venv/data/postgresql0 && \
+chmod -R 700 /home/venv/data/pg_data && chown -R 1001:1001 /home/venv/data && \
+chmod 700 /home/venv/config.yml && chown 1001:1001 /home/venv/config.yml
+
+echo "Created data and config directories"

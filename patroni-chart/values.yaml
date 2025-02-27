@@ -1,0 +1,130 @@
+replicaCount: 3
+
+image:
+  repository: harbor.softlogic.ai/library/patroni
+  pullPolicy: Always
+
+configmap:
+  baseconfig: | 
+    bootstrap:
+      dcs:
+        ttl: 30
+        loop_wait: 10
+        retry_timeout: 10
+        maximum_lag_on_failover: 1048576
+        postgresql:
+          use_pg_rewind: true
+          pg_hba:
+            - host replication replicator 0.0.0.0/0 md5
+            - host all all 0.0.0.0/0 md5
+          parameters:
+      initdb:
+      - encoding: UTF8
+      - data-checksums
+    tags:
+        noloadbalance: false
+        clonefrom: false
+        nostream: false
+
+imagePullSecrets: []
+
+serviceAccount:
+  create: true
+  automount: true
+
+podAnnotations: 
+  app: patroni
+
+podLabels:
+  app: patroni
+
+command: ["/home/venv/bin/patroni", "/home/venv/config.yml"]
+
+initContainers:
+  command: ["sh", "-c", ""]
+  volumeMounts:
+  - name: postgres-data
+    mountPath: /home/venv/data
+
+securityContext: 
+  global:
+    fsGroup: 1001
+    fsGroupChangePolicy: "Always"
+  initContainers:
+    runAsUser: 0
+  patroni:
+    runAsUser: 1001
+    runAsGroup: 1001
+
+service:
+  type: ClusterIP
+  ports:
+  - port: 5432
+    targetPort: postgres-0
+    protocol: TCP
+    name: postgres-0
+  - port: 5433
+    targetPort: postgres-1
+    protocol: TCP
+    name: postgres-1
+  - port: 5434
+    targetPort: postgres-2
+    protocol: TCP
+    name: postgres-2
+  - port: 2222
+    targetPort: raft-0
+    protocol: TCP
+    name: raft-0
+  - port: 2223
+    targetPort: raft-1
+    protocol: TCP
+    name: raft-1
+  - port: 2224
+    targetPort: raft-2
+    protocol: TCP
+    name: raft-2
+  - port: 8000
+    targetPort: restapi-0
+    protocol: TCP
+    name: restapi-0
+  - port: 8001
+    targetPort: restapi-1
+    protocol: TCP
+    name: restapi-1
+  - port: 8002
+    targetPort: restapi-2
+    protocol: TCP
+    name: restapi-2
+
+pvc:
+  storageClassName: "longhorn-default"
+  postgres:
+    resources:
+      requests:
+        storage: 1Gi
+  raft: 
+    resources:
+      requests:
+        storage: 1Gi
+
+volumes:
+- name: patroni-config
+  configMap:
+    name: patroni-config
+
+volumeMounts: 
+- name: postgres-data
+  mountPath: /home/venv/data
+- name: raft-data
+  mountPath: /home/venv/raft
+- name: patroni-config
+  mountPath: /home/venv/config.yml
+  subPath: config.yml
+
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: node-role.kubernetes.io/production
+              operator: Exists

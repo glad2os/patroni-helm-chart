@@ -18,12 +18,16 @@ spec:
       containers:
       - name: alpine
         image: alpine:latest
-        command: ["/bin/sh", "-c", "cd ~ && touch $MY_POD_INDEX.txt && sleep infinity"]
+        command: ["/bin/sh", "-c", "cd ~ && touch $MY_POD_INDEX.txt && echo $POD_NAMESPACE >> $MY_POD_INDEX.txt && sleep infinity"]
         env:
           - name: MY_POD_INDEX
             valueFrom:
               fieldRef:
                 fieldPath: metadata.labels['apps.kubernetes.io/pod-index']
+          - name: POD_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
         ports:
         - containerPort: 80
           name: web
