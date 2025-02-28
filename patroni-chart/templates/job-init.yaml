@@ -1,0 +1,44 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: pgsql-plugin-init
+  labels:
+    app: pgsql-plugin-init
+spec:
+  template:
+    metadata:
+      name: pgsql-plugin-init
+      labels:
+        app: pgsql-plugin-init
+    spec:
+      containers:
+      - name: pgsql-plugin-init
+        image: mirror.gcr.io/postgres:17
+        command: ["/bin/bash", "/root/init-job.sh"]
+        env:
+          - name: SERVICE_NAME
+            value: postgres
+          - name: POSTGRES_PASSWORD
+            value: {{ .Values.POSTGRES_PASSWORD }}
+          - name: POSTGRES_USER
+            value: {{ .Values.POSTGRES_USER }}
+          - name: POSTGRES_DB
+            value: postgres
+          - name: MY_POD_INDEX
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['apps.kubernetes.io/pod-index']
+          - name: POD_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+        volumeMounts:
+        - name: patroni-config-init-job
+          mountPath: /root/init-job.sh
+          subPath: init-job
+      volumes:
+      - name: patroni-config-init-job
+        configMap:
+          name: patroni
+      restartPolicy: OnFailure
+      dnsPolicy: ClusterFirst

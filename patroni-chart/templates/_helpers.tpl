@@ -64,12 +64,57 @@ Create the name of the service account to use
 {{- define "init-job-script" -}}
 #!/bin/bash
 
+apt update && apt install -y curl
+
+POD1_DNS="postgres-0.${SERVICE_NAME}.${POD_NAMESPACE}.svc.cluster.local:8000"
+POD2_DNS="postgres-1.${SERVICE_NAME}.${POD_NAMESPACE}.svc.cluster.local:8001"
+POD3_DNS="postgres-2.${SERVICE_NAME}.${POD_NAMESPACE}.svc.cluster.local:8002"
+
+function get_postgres_leader() {
+    while true; do
+        POD1=$(curl -s -o /dev/null -w "%{http_code}" http://${POD1_DNS}/leader)
+        POD2=$(curl -s -o /dev/null -w "%{http_code}" http://${POD2_DNS}/leader)
+        POD3=$(curl -s -o /dev/null -w "%{http_code}" http://${POD3_DNS}/leader)
+
+        if [ "$POD1" == "200" ]; then
+            LEADER_ADDRESS="${POD1_DNS}"
+            echo "Leader found at ${LEADER_ADDRESS}"
+            return 0
+        elif [ "$POD2" == "200" ]; then
+            LEADER_ADDRESS="${POD2_DNS}"
+            echo "Leader found at ${LEADER_ADDRESS}"
+            return 0
+        elif [ "$POD3" == "200" ]; then
+            LEADER_ADDRESS="${POD3_DNS}"
+            echo "Leader found at ${LEADER_ADDRESS}"
+            return 0
+        else
+            echo "No leader found, retrying in 5 seconds..."
+            sleep 5
+        fi
+    done
+}
+
+get_postgres_leader
+
+LEADER_PORT=$(echo "${LEADER_ADDRESS}" | awk -F ':' '{print $2}')
+
+case "${LEADER_PORT}" in
+    8000) POSTGRES_PORT=5432 ;;
+    8001) POSTGRES_PORT=5433 ;;
+    8002) POSTGRES_PORT=5434 ;;
+    *) echo "Unknown port mapping!"; exit 1 ;;
+esac
+
+LEADER_HOST=$(echo "${LEADER_ADDRESS}" | awk -F ':' '{print $1}')
+
+echo "Connecting to PostgreSQL at ${LEADER_HOST}:${POSTGRES_PORT}..."
+
 check_db_ready() {
-    pg_isready -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" -h ${POSTGRES_HOST} > /dev/null 2>&1
+    pg_isready -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" -h ${LEADER_HOST} -p ${POSTGRES_PORT} > /dev/null 2>&1
     return $?
 }
 
-# Ожидаем, пока база данных будет доступна
 until check_db_ready; do
   echo "Waiting for database to be ready..."
   sleep 2
@@ -77,8 +122,7 @@ done
 
 echo "Database is ready!"
 
-# Устанавливаем расширение pgvector
-PGPASSWORD=${POSTGRES_PASSWORD} psql -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" -h ${POSTGRES_HOST} -c 'CREATE EXTENSION IF NOT EXISTS vector;'
+PGPASSWORD="${POSTGRES_PASSWORD}" psql -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" -h "${LEADER_HOST}" -p "${POSTGRES_PORT}" -c 'CREATE EXTENSION IF NOT EXISTS vector;'
 if [ $? -eq 0 ]; then
   echo "Extension 'vector' created successfully."
 else
@@ -86,14 +130,17 @@ else
   exit 1
 fi
 
-# Устанавливаем расширение postgis
-PGPASSWORD=${POSTGRES_PASSWORD} psql -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" -h ${POSTGRES_HOST} -c 'CREATE EXTENSION IF NOT EXISTS postgis;'
+PGPASSWORD="${POSTGRES_PASSWORD}" psql -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" -h "${LEADER_HOST}" -p "${POSTGRES_PORT}" -c 'CREATE EXTENSION IF NOT EXISTS postgis;'
 if [ $? -eq 0 ]; then
   echo "Extension 'postgis' created successfully."
 else
   echo "Failed to create extension 'postgis'."
   exit 1
 fi
+
+PGPASSWORD="${POSTGRES_PASSWORD}" psql -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" -h "${LEADER_HOST}" -p "${POSTGRES_PORT}" -c "SELECT * FROM pg_extension;"
+
+echo "Extensions created successfully."
 {{- end }}
 
 {{- define "init-generator-script" -}}
