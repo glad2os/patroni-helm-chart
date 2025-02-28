@@ -2,14 +2,15 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: pgsql-plugin-init
-  labels:
-    app: pgsql-plugin-init
 spec:
   template:
     metadata:
       name: pgsql-plugin-init
       labels:
-        app: pgsql-plugin-init
+        {{- include "patroni-chart.labels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
     spec:
       containers:
       - name: pgsql-plugin-init

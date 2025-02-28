@@ -67,9 +67,6 @@ spec:
         - name: patroni-config-init-generator-script
           mountPath: /home/venv/generator.sh
           subPath: init-generator-script
-        - name: patroni-config-init-job
-          mountPath: /home/venv/init-job.sh
-          subPath: init-job
         - name: shared-config-volume
           mountPath: /home/venv/config
         securityContext:
@@ -142,9 +139,6 @@ spec:
         - name: patroni-config-init-generator-script
           mountPath: /home/venv/generator.sh
           subPath: init-generator-script
-        - name: patroni-config-init-job
-          mountPath: /home/venv/init-job.sh
-          subPath: init-job
         - name: shared-config-volume
           mountPath: /home/venv/config
         command: {{ toYaml .Values.patroni.command | nindent 8 }}
@@ -156,9 +150,6 @@ spec:
       {{- end }}
       - name: shared-config-volume
         emptyDir: {}
-      - name: patroni-config-init-job
-        configMap:
-          name: patroni
       - name: patroni-config-init-generator-script
         configMap:
           name: patroni
