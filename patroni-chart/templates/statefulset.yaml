@@ -136,7 +136,6 @@ spec:
           mountPath: /home/venv/data
         - name: raft-data
           mountPath: /home/venv/raft
-
         - name: patroni-config-baseconfig
           mountPath: /home/venv/baseconfig.yml
           subPath: baseconfig
@@ -155,7 +154,6 @@ spec:
       {{- if .Values.extraVolumes }}
           {{- toYaml .Values.extraVolumes | nindent 6 }}
       {{- end }}
-      volumes:
       - name: shared-config-volume
         emptyDir: {}
       - name: patroni-config-init-job
