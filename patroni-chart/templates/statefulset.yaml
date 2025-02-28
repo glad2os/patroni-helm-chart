@@ -44,9 +44,8 @@ spec:
         imagePullPolicy: Always
         image: "{{ .Values.image.repository }}:{{ .Chart.AppVersion }}"
         env:
-        {{- range .Values.env }}
-          - name: {{ .name }}
-            value: {{ .value }}
+        {{- if .Values.extraEnv }}
+          {{- toYaml .Values.extraEnv | nindent 10 }}
         {{- end }}
           - name: POSTGRES_PASSWORD
             value: {{ .Values.POSTGRES_PASSWORD }}
@@ -69,21 +68,52 @@ spec:
               fieldRef:
                 fieldPath: metadata.namespace
         ports:
-        {{- range .Values.patroni.ports }}
-        - containerPort: {{ .containerPort }}
-          name: {{ .name }}
-        {{- end }}        
-        {{- with .Values.volumeMounts }}
-        volumeMounts:
-          {{- toYaml . | nindent 8 }}
+        - containerPort: 5432
+          name: postgres-0
+        - containerPort: 5433
+          name: postgres-1
+        - containerPort: 5434
+          name: postgres-2
+        - containerPort: 2222
+          name: raft-0
+        - containerPort: 2223
+          name: raft-1
+        - containerPort: 2224
+          name: raft-2
+        - containerPort: 8000
+          name: restapi-0
+        - containerPort: 8001
+          name: restapi-1
+        - containerPort: 8002
+          name: restapi-2
+        {{- if .Values.patroni.extraPorts }}
+          {{- with .Values.patroni.extraPorts }}
+            {{- toYaml . | nindent 8 }}
+          {{- end }}
         {{- end }}
+        volumeMounts:    
+        {{- if .Values.extraVolumeMounts }}
+          {{- with .Values.extraVolumeMounts }}
+            {{- toYaml . | nindent 8 }}
+          {{- end }}
+        {{- end }}
+        - name: postgres-data
+          mountPath: /home/venv/data
+        - name: raft-data
+          mountPath: /home/venv/raft
+        - name: patroni-config
+          mountPath: /home/venv/config.yml
+          subPath: config.yml
         command: {{ .Values.patroni.command }}
         securityContext:
         {{- toYaml .Values.securityContext.patroni | nindent 10 }}
-      {{- with .Values.volumes }}
       volumes:
-        {{- toYaml . | nindent 8 }}
+      {{- if .Values.extraVolumes }}
+          {{- toYaml .Values.extraVolumes | nindent 6 }}
       {{- end }}
+      - name: patroni-config
+        configMap:
+          name: patroni-config
   volumeClaimTemplates:
   - metadata:
       name: postgres-data
@@ -97,4 +127,3 @@ spec:
       accessModes: [ "ReadWriteOnce" ]
       storageClassName: {{ .Values.pvc.storageClassName }}
       resources: {{ toYaml .Values.pvc.raft.resources | nindent 8 }}
-

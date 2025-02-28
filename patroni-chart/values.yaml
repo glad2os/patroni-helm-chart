@@ -11,28 +11,6 @@ image:
 
 imagePullSecrets: []
 
-configmap:
-  baseconfig: | 
-    bootstrap:
-      dcs:
-        ttl: 30
-        loop_wait: 10
-        retry_timeout: 10
-        maximum_lag_on_failover: 1048576
-        postgresql:
-          use_pg_rewind: true
-          pg_hba:
-            - host replication replicator 0.0.0.0/0 md5
-            - host all all 0.0.0.0/0 md5
-          parameters:
-      initdb:
-      - encoding: UTF8
-      - data-checksums
-    tags:
-        noloadbalance: false
-        clonefrom: false
-        nostream: false
-
 pvc:
   storageClassName: "longhorn-default"
   postgres:
@@ -47,7 +25,7 @@ pvc:
 replicaCount: 3
 
 # Use for extra env variables
-env: []
+extraEnv: []
   # - name: TEST_VARIABLE
   #   value: test_value
 
@@ -67,25 +45,9 @@ initContainers:
 
 patroni:
   command: ["/home/venv/bin/patroni", "/home/venv/config.yml"]
-  ports:
-    - containerPort: 5432
-      name: postgres-0
-    - containerPort: 5433
-      name: postgres-1
-    - containerPort: 5434
-      name: postgres-2
-    - containerPort: 2222
-      name: raft-0
-    - containerPort: 2223
-      name: raft-1
-    - containerPort: 2224
-      name: raft-2
-    - containerPort: 8000
-      name: restapi-0
-    - containerPort: 8001
-      name: restapi-1
-    - containerPort: 8002
-      name: restapi-2
+  extraPorts: []
+    # - containerPort: 1337
+    #   name: custom-port
 
 securityContext: 
   global:
@@ -99,62 +61,32 @@ securityContext:
 
 service:
   type: ClusterIP
-  ports:
-  - port: 5432
-    targetPort: postgres-0
-    protocol: TCP
-    name: postgres-0
-  - port: 5433
-    targetPort: postgres-1
-    protocol: TCP
-    name: postgres-1
-  - port: 5434
-    targetPort: postgres-2
-    protocol: TCP
-    name: postgres-2
-  - port: 2222
-    targetPort: raft-0
-    protocol: TCP
-    name: raft-0
-  - port: 2223
-    targetPort: raft-1
-    protocol: TCP
-    name: raft-1
-  - port: 2224
-    targetPort: raft-2
-    protocol: TCP
-    name: raft-2
-  - port: 8000
-    targetPort: restapi-0
-    protocol: TCP
-    name: restapi-0
-  - port: 8001
-    targetPort: restapi-1
-    protocol: TCP
-    name: restapi-1
-  - port: 8002
-    targetPort: restapi-2
-    protocol: TCP
-    name: restapi-2
+  # Use for extra annotations
+  annotations: []
+  # Use for extra ports
+  extraPorts: []
+    # - port: 1337
+    #   targetPort: 1337
+    #   protocol: TCP
+    #   name: custom-port
 
 serviceAccount:
   create: true
   automount: true
 
-volumes:
-- name: patroni-config
-  configMap:
-    name: patroni-config
+# Use for extra volumes
+extraVolumes: []
+# - name: custom-config
+#   configMap:
+#     name: custom-config
 
-volumeMounts: 
-- name: postgres-data
-  mountPath: /home/venv/data
-- name: raft-data
-  mountPath: /home/venv/raft
-- name: patroni-config
-  mountPath: /home/venv/config.yml
-  subPath: config.yml
+# Use for extra volume mounts
+extraVolumeMounts: []
+# - name: custom-config
+#   mountPath: /home/venv/config.yml
+#   subPath: config.yml
 
+# Use for affinity
 affinity:
   nodeAffinity:
     requiredDuringSchedulingIgnoredDuringExecution:

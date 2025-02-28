@@ -4,13 +4,53 @@ metadata:
   name: {{ include "patroni-chart.fullname" . }}
   labels:
     {{- include "patroni-chart.labels" . | nindent 4 }}
+  {{- if .Values.service.annotations }}
+  annotations:
+    {{- with .Values.service.annotations }}
+      {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- end }}
 spec:
   type: {{ .Values.service.type }}
-  ports: {{- range .Values.service.ports }}
-  - port: {{ .port }}
-    targetPort: {{ .targetPort }}
-    protocol: {{ .protocol }}
-    name: {{ .name }}
+  ports:
+  {{- if .Values.service.extraPorts }}
+    {{- toYaml .Values.service.extraPorts | nindent 2 }}
   {{- end }}
+  - port: 5432
+    targetPort: postgres-0
+    protocol: TCP
+    name: postgres-0
+  - port: 5433
+    targetPort: postgres-1
+    protocol: TCP
+    name: postgres-1
+  - port: 5434
+    targetPort: postgres-2
+    protocol: TCP
+    name: postgres-2
+  - port: 2222
+    targetPort: raft-0
+    protocol: TCP
+    name: raft-0
+  - port: 2223
+    targetPort: raft-1
+    protocol: TCP
+    name: raft-1
+  - port: 2224
+    targetPort: raft-2
+    protocol: TCP
+    name: raft-2
+  - port: 8000
+    targetPort: restapi-0
+    protocol: TCP
+    name: restapi-0
+  - port: 8001
+    targetPort: restapi-1
+    protocol: TCP
+    name: restapi-1
+  - port: 8002
+    targetPort: restapi-2
+    protocol: TCP
+    name: restapi-2
   selector:
     {{- include "patroni-chart.selectorLabels" . | nindent 4 }}
