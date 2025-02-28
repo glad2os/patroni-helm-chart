@@ -61,7 +61,6 @@ Create the name of the service account to use
 {{- end }}
 {{- end }}
 
-
 {{- define "init-job-script" -}}
 #!/bin/bash
 
@@ -96,13 +95,6 @@ else
   exit 1
 fi
 {{- end }}
-
-
-
-
-
-
-
 
 {{- define "init-generator-script" -}}
 #!/bin/bash
@@ -220,7 +212,6 @@ echo "Config path /home/venv/config/config.yml"
 cat  /home/venv/config/config.yml
 
 {{- end -}}
-
 
 {{- define "baseconfig" -}}
 bootstrap:

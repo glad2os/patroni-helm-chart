@@ -1,1 +1,20 @@
-Finish it later
+CHART NAME: {{ .Chart.Name }}
+CHART VERSION: {{ .Chart.Version }}
+APP VERSION: {{ .Chart.AppVersion }}
+Namespace: {{ .Release.Namespace }}
+
+The StatefulSet "postgres" has been successfully installed with the service "postgres". You can now use the following DNS addresses for further connections:
+
+🛠  PostgreSQL Access Credentials:
+- User: {{ .Values.POSTGRES_USER }}
+- Password: {{ .Values.POSTGRES_PASSWORD }}
+
+🌐 PostgreSQL DNS Addresses:
+- postgres-0.postgres.{{ .Release.Namespace }}.svc.cluster.local:5432
+- postgres-1.postgres.{{ .Release.Namespace }}.svc.cluster.local:5433
+- postgres-2.postgres.{{ .Release.Namespace }}.svc.cluster.local:5434
+
+🌐 API DNS Addresses
+- postgres-0.postgres.{{ .Release.Namespace }}.svc.cluster.local:8000
+- postgres-1.postgres.{{ .Release.Namespace }}.svc.cluster.local:8001
+- postgres-2.postgres.{{ .Release.Namespace }}.svc.cluster.local:8002
