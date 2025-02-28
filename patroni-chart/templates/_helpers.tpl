@@ -146,7 +146,7 @@ raft:
   data_dir: raft
   self_addr: postgres-${MY_POD_INDEX}.postgres.${POD_NAMESPACE}.svc.cluster.local:222$((2 + MY_POD_INDEX))
   partner_addrs:
-$(echo "$PARTNERS" | sed 's/^/    - /')
+$(echo "$PARTNERS" | sed 's/^/  - /')
 
 EOF
 
@@ -203,12 +203,21 @@ cat ./baseconfig.yml >> ./config.yml
 
 echo "Generated config.yml"
 
-mkdir -p /home/venv/data/pg_data && \
-chmod -R 700 /home/venv/data/postgresql0 && \
-chmod -R 700 /home/venv/data/pg_data && chown -R 1001:1001 /home/venv/data && \
-chmod 700 /home/venv/config.yml && chown 1001:1001 /home/venv/config.yml
+
+mkdir -p /home/venv/config/ /home/venv/data/postgresql${MY_POD_INDEX} && \
+cp ./config.yml /home/venv/config/config.yml && \
+chmod -R 700 /home/venv/data/postgresql${MY_POD_INDEX} && \
+chown -R 1001:1001 /home/venv/data && \
+chmod 700 /home/venv/config.yml && \
+chmod 700 /home/venv/config/config.yml && \
+chown 1001:1001 /home/venv/config.yml && \
+chown 1001:1001 /home/venv/config/config.yml
 
 echo "Created data and config directories"
+echo "Config path /home/venv/config/config.yml"
+
+cat  /home/venv/config/config.yml
+
 {{- end -}}
 
 

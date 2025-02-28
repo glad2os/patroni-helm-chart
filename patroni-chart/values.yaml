@@ -24,11 +24,6 @@ pvc:
 
 replicaCount: 3
 
-# Use for extra env variables
-extraEnv: []
-  # - name: TEST_VARIABLE
-  #   value: test_value
-
 # Use for extra pod annotations
 podAnnotations: 
   app: patroni
@@ -38,16 +33,22 @@ podLabels:
   app: patroni
 
 initContainers:
-  command: ["sh", "-c", ""]
-  volumeMounts:
-  - name: postgres-data
-    mountPath: /home/venv/data
+  command: ["sh", "-c", "mkdir -p /home/venv/ && cd /home/venv/ && sh ./generator.sh"]
+  # Use for extra env variables
+  extraEnv: []
+  # - name: TEST_VARIABLE
+  #   value: test_value
+  volumeMounts: []
 
 patroni:
-  command: ["/home/venv/bin/patroni", "/home/venv/config.yml"]
+  command: ["/home/venv/bin/patroni", "/home/venv/config/config.yml"]
   extraPorts: []
     # - containerPort: 1337
     #   name: custom-port
+  # Use for extra env variables
+  extraEnv: []
+  # - name: TEST_VARIABLE
+  #   value: test_value
 
 securityContext: 
   global:

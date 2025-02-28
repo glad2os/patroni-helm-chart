@@ -31,12 +31,47 @@ spec:
       - name: init-data-dir
         image: busybox
         env:
-          {{- toYaml .Values.env | nindent 10 }}
-        command: {{ .Values.initContainers.command }}
-        {{- with .Values.initContainers.volumeMounts }}
+          - name: MY_POD_INDEX
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['apps.kubernetes.io/pod-index']
+          - name: POD_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          - name: POSTGRES_PASSWORD
+            value: {{ .Values.POSTGRES_PASSWORD }}
+          - name: POSTGRES_USER
+            value: {{ .Values.POSTGRES_USER }}
+          - name: REPLICATION_PASSWORD
+            value: {{ .Values.REPLICATION_PASSWORD }}
+          - name: REPLICATION_USER
+            value: {{ .Values.REPLICATION_USER }}
+          - name: REWIND_PASSWORD
+            value: {{ .Values.REWIND_PASSWORD }}
+          - name: REWIND_USER
+            value: {{ .Values.REWIND_USER }}
+        {{- if .Values.initContainers.extraEnv }}
+          {{- toYaml .Values.initContainers.extraEnv | nindent 10 }}
+        {{- end }}
+        command: {{ toYaml .Values.initContainers.command | nindent 8 }}
         volumeMounts:
+        {{- with .Values.initContainers.volumeMounts }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
+        - name: postgres-data
+          mountPath: /home/venv/data
+        - name: patroni-config-baseconfig
+          mountPath: /home/venv/baseconfig.yml
+          subPath: baseconfig
+        - name: patroni-config-init-generator-script
+          mountPath: /home/venv/generator.sh
+          subPath: init-generator-script
+        - name: patroni-config-init-job
+          mountPath: /home/venv/init-job.sh
+          subPath: init-job
+        - name: shared-config-volume
+          mountPath: /home/venv/config
         securityContext:
         {{- toYaml .Values.securityContext.initContainers | nindent 10 }}
       containers:
@@ -44,8 +79,8 @@ spec:
         imagePullPolicy: Always
         image: "{{ .Values.image.repository }}:{{ .Chart.AppVersion }}"
         env:
-        {{- if .Values.extraEnv }}
-          {{- toYaml .Values.extraEnv | nindent 10 }}
+        {{- if .Values.patroni.extraEnv }}
+          {{- toYaml .Values.patroni.extraEnv | nindent 10 }}
         {{- end }}
           - name: POSTGRES_PASSWORD
             value: {{ .Values.POSTGRES_PASSWORD }}
@@ -101,19 +136,38 @@ spec:
           mountPath: /home/venv/data
         - name: raft-data
           mountPath: /home/venv/raft
-        - name: patroni-config
-          mountPath: /home/venv/config.yml
-          subPath: config.yml
-        command: {{ .Values.patroni.command }}
+
+        - name: patroni-config-baseconfig
+          mountPath: /home/venv/baseconfig.yml
+          subPath: baseconfig
+        - name: patroni-config-init-generator-script
+          mountPath: /home/venv/generator.sh
+          subPath: init-generator-script
+        - name: patroni-config-init-job
+          mountPath: /home/venv/init-job.sh
+          subPath: init-job
+        - name: shared-config-volume
+          mountPath: /home/venv/config
+        command: {{ toYaml .Values.patroni.command | nindent 8 }}
         securityContext:
         {{- toYaml .Values.securityContext.patroni | nindent 10 }}
       volumes:
       {{- if .Values.extraVolumes }}
           {{- toYaml .Values.extraVolumes | nindent 6 }}
       {{- end }}
-      - name: patroni-config
+      volumes:
+      - name: shared-config-volume
+        emptyDir: {}
+      - name: patroni-config-init-job
         configMap:
-          name: patroni-config
+          name: patroni
+      - name: patroni-config-init-generator-script
+        configMap:
+          name: patroni
+      - name: patroni-config-baseconfig
+        configMap:
+          name: patroni
+
   volumeClaimTemplates:
   - metadata:
       name: postgres-data

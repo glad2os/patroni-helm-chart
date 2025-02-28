@@ -1,0 +1,7 @@
+raft:
+  data_dir: raft
+  self_addr: postgres-0.postgres.default.svc.cluster.local:2222
+  partner_addrs:
+  - postgres-1.postgres.default.svc.cluster.local:2223
+  - postgres-2.postgres.default.svc.cluster.local:2224
+
