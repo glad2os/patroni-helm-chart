@@ -119,6 +119,8 @@ if [ -z "$POD_NAMESPACE" ]; then
   exit 1
 fi
 
+SERVICE_NAME=postgres
+
 # Create and clean up config.yml
 touch ./config.yml
 echo "" > ./config.yml
@@ -139,12 +141,12 @@ scope: postgres-${POD_NAMESPACE}
 
 EOF
 
-PARTNERS=$(seq 0 2 | grep -v "$MY_POD_INDEX" | xargs -I{} sh -c 'echo "postgres-{}.postgres.$1.svc.cluster.local:222$((2 + {}))"' -- "${POD_NAMESPACE}")
+PARTNERS=$(seq 0 2 | grep -v "$MY_POD_INDEX" | xargs -I{} sh -c 'echo "postgres-{}.'$SERVICE_NAME'.'$POD_NAMESPACE'.svc.cluster.local:222$((2 + {}))"')
 
 cat <<EOF >> ./config.yml
 raft:
   data_dir: raft
-  self_addr: postgres-${MY_POD_INDEX}.postgres.${POD_NAMESPACE}.svc.cluster.local:222$((2 + MY_POD_INDEX))
+  self_addr: postgres-${MY_POD_INDEX}.${SERVICE_NAME}.${POD_NAMESPACE}.svc.cluster.local:222$((2 + MY_POD_INDEX))
   partner_addrs:
 $(echo "$PARTNERS" | sed 's/^/  - /')
 
@@ -157,7 +159,7 @@ API_PORT=$((8000 + MY_POD_INDEX))
 cat <<EOF >> ./config.yml
 restapi:
   listen: 0.0.0.0:$API_PORT
-  connect_address: postgres-${MY_POD_INDEX}.postgres.${POD_NAMESPACE}.svc.cluster.local:$API_PORT
+  connect_address: postgres-${MY_POD_INDEX}.${SERVICE_NAME}.${POD_NAMESPACE}.svc.cluster.local:$API_PORT
 
 EOF
 
@@ -169,7 +171,6 @@ echo "Using user: $POSTGRES_USER"
 
 echo "replication creds: "
 echo "Using password: $REPLICATION_PASSWORD"
-echo "Using user: $REPLICATION_USER"
 
 echo "rewind creds: "
 echo "Using password: $REWIND_PASSWORD"
@@ -180,12 +181,12 @@ POSTGRES_PORT=$((5432 + MY_POD_INDEX))
 cat <<EOF >> ./config.yml
 postgresql:
   listen: 0.0.0.0:$POSTGRES_PORT
-  connect_address: postgres-${MY_POD_INDEX}.postgres.${POD_NAMESPACE}.svc.cluster.local:$POSTGRES_PORT
+  connect_address: postgres-${MY_POD_INDEX}.${SERVICE_NAME}.${POD_NAMESPACE}.svc.cluster.local:$POSTGRES_PORT
   data_dir: data/postgresql${MY_POD_INDEX}
   pgpass: /tmp/pgpass${MY_POD_INDEX}
   authentication:
     replication:
-      username: $REPLICATION_USER
+      username: replicator
       password: $REPLICATION_PASSWORD
     superuser:
       username: $POSTGRES_USER
