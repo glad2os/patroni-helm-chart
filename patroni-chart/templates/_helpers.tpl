@@ -229,7 +229,7 @@ postgresql:
       password: $REPLICATION_PASSWORD
     superuser:
       username: $POSTGRES_USER
-      password: $POSTGRES_USER
+      password: $POSTGRES_PASSWORD
     rewind:
       username: $REWIND_USER
       password: $REWIND_PASSWORD
