@@ -6,7 +6,7 @@ REWIND_PASSWORD: "rewind"
 REWIND_USER: "rewind"
 
 image:
-  repository: harbor.softlogic.ai/library/patroni
+  repository: glad2os/patroni:v0.0.1
   pullPolicy: Always
 
 imagePullSecrets: []
