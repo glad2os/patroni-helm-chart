@@ -65,6 +65,8 @@ helm upgrade --install patroni -n postgresql .
 After deployment, you can connect to the PostgreSQL cluster using the service name:
 
 ```bash
+kubectl exec -it sts/postgres -- ./bin/patronictl -c config/config.yml topology postgres-${POD_NAMESPACE}
+
 kubectl exec -it sts/postgres -- psql -U postgres -h 0.0.0.0 -d postgres
 ```
 
