@@ -4,6 +4,10 @@ scope: postgres
 raft:
   data_dir: raft
   self_addr: postgres-0:2222
+  partner_addrs:
+  - postgres-1:2222
+  - postgres-2:2222
+
 restapi:
   listen: 0.0.0.0:8000
   connect_address: postgres-0:8000

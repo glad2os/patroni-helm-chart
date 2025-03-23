@@ -1,9 +1,13 @@
-name: postgres-0
+name: postgres-1
 scope: postgres
 
 raft:
   data_dir: raft
   self_addr: postgres-1:2222
+  partner_addrs:
+  - postgres-0:2222
+  - postgres-2:2222
+
 restapi:
   listen: 0.0.0.0:8000
   connect_address: postgres-1:8000
