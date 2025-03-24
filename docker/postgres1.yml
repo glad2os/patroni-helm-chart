@@ -1,16 +1,34 @@
-scope: batman
-name: postgresql1
-
-restapi:
-  listen: 0.0.0.0:8009
-  connect_address: postgres-1:8009
+name: postgres-1
+scope: postgres
 
 raft:
- data_dir: raft
- self_addr: postgres-1:2223
- partner_addrs:
- - postgres-0:2222
- - postgres-2:2224
+  data_dir: raft
+  self_addr: postgres-1:2222
+  partner_addrs:
+  - postgres-0:2222
+  - postgres-2:2222
+
+restapi:
+  listen: 0.0.0.0:8000
+  connect_address: postgres-1:8000
+
+postgresql:
+  listen: 0.0.0.0:5432
+  connect_address: postgres-0:5432
+  data_dir: data/postgresql1
+  pgpass: /tmp/pgpass1
+  authentication:
+    replication:
+      username: replicator
+      password: postgres
+    superuser:
+      username: postgres
+      password: postgres
+    rewind:
+      username: postgres
+      password: postgres
+  parameters:
+    unix_socket_directories: '..'
 
 bootstrap:
   dcs:
@@ -28,27 +46,7 @@ bootstrap:
   - encoding: UTF8
   - data-checksums
 
-postgresql:
-  listen: 0.0.0.0:5433
-  connect_address: postgres-1:5433
-  data_dir: data/postgresql1
-  pgpass: /tmp/pgpass1
-  authentication:
-    replication:
-      username: replicator
-      password: rep-pass
-    superuser:
-      username: postgres
-      password: patroni
-    rewind:
-      username: rewind_user
-      password: rewind_password
-  parameters:
-    unix_socket_directories: '..'
-  basebackup:
-      - verbose
-      - max-rate: 100M
-
 tags:
     noloadbalance: false
     clonefrom: false
+    nostream: false

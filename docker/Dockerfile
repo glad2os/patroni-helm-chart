@@ -14,7 +14,9 @@ RUN apt-get update && \
     /home/venv/bin/pip install --upgrade pip && \
     /home/venv/bin/pip install patroni[raft,psycopg3] && \
     apt-get purge -y --auto-remove && \
-    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/* && \
+    groupadd -g 1001 venv && \
+    useradd -ms /bin/bash -g venv -u 1001 1001
 
 WORKDIR /home/venv
 

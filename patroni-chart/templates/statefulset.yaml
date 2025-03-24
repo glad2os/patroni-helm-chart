@@ -24,6 +24,10 @@ spec:
       affinity:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       terminationGracePeriodSeconds: 30
       securityContext:
       {{- toYaml .Values.securityContext.global | nindent 8 }}
@@ -51,6 +55,8 @@ spec:
             value: {{ .Values.REWIND_PASSWORD }}
           - name: REWIND_USER
             value: {{ .Values.REWIND_USER }}
+          - name: REPLICA_COUNT
+            value: "{{ .Values.replicaCount }}"
         {{- if .Values.initContainers.extraEnv }}
           {{- toYaml .Values.initContainers.extraEnv | nindent 10 }}
         {{- end }}
@@ -99,6 +105,8 @@ spec:
             valueFrom:
               fieldRef:
                 fieldPath: metadata.namespace
+          - name: REPLICA_COUNT
+            value: "{{ .Values.replicaCount }}"
         ports:
         - containerPort: 5432
           name: postgres-0

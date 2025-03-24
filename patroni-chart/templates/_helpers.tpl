@@ -180,16 +180,28 @@ scope: postgres-${POD_NAMESPACE}
 
 EOF
 
-PARTNERS=$(seq 0 2 | grep -v "$MY_POD_INDEX" | xargs -I{} sh -c 'echo "postgres-{}.'$SERVICE_NAME'.'$POD_NAMESPACE'.svc.cluster.local:222$((2 + {}))"')
+if [ "$REPLICA_COUNT" -eq 1 ]; then
+  PARTNERS=""
+elif [ "$REPLICA_COUNT" -eq 2 ]; then
+  PARTNERS=$(seq 0 2 | grep -v "$MY_POD_INDEX" | xargs -I{} sh -c 'echo "postgres-{}.'$SERVICE_NAME'.'$POD_NAMESPACE'.svc.cluster.local:222$((2 + {}))"')
+else
+  PARTNERS=$(seq 0 $((REPLICA_COUNT - 1)) | grep -v "$MY_POD_INDEX" | xargs -I{} sh -c 'echo "postgres-{}.'$SERVICE_NAME'.'$POD_NAMESPACE'.svc.cluster.local:222$((2 + {}))"')
+fi
 
+# Write configuration file
 cat <<EOF >> ./config.yml
 raft:
   data_dir: raft
   self_addr: postgres-${MY_POD_INDEX}.${SERVICE_NAME}.${POD_NAMESPACE}.svc.cluster.local:222$((2 + MY_POD_INDEX))
+EOF
+
+# Append partner_addrs only if there are other nodes
+if [ "$REPLICA_COUNT" -gt 1 ]; then
+  cat <<EOF >> ./config.yml
   partner_addrs:
 $(echo "$PARTNERS" | sed 's/^/  - /')
-
 EOF
+fi
 
 # Restapi field
 
