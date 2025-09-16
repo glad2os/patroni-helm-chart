@@ -246,6 +246,7 @@ postgresql:
       username: $REWIND_USER
       password: $REWIND_PASSWORD
   parameters:
+    max_prepared_transactions: 150
     unix_socket_directories: '..'
 EOF
 
@@ -285,7 +286,6 @@ bootstrap:
         - host replication replicator 0.0.0.0/0 md5
         - host all all 0.0.0.0/0 md5
       parameters:
-        max_prepared_transactions: 150
   initdb:
   - encoding: UTF8
   - data-checksums
